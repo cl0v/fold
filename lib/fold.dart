@@ -4,7 +4,7 @@ import 'dart:async';
 import 'package:flutter/widgets.dart';
 // import 'package:flutter/widgets.dart';
 
-enum FoldState {
+enum _FoldState {
   idle,
   loading,
   value,
@@ -12,14 +12,14 @@ enum FoldState {
 }
 
 base class Fold<T, E extends Exception?> {
-  final FoldState _state;
+  final _FoldState _state;
   const Fold(this._state);
 
-  static Fold idle = Idle();
-  static Fold loading = Loading();
+  static Fold idle = FoldIdle();
+  static Fold loading = FoldLoading();
 
-  static Fold<T, void> value<T>(T result) => Value(result);
-  static Fold<void, E> error<E extends Exception>(E result) => Error(result);
+  static Fold<T, void> value<T>(T result) => FoldValue(result);
+  static Fold<void, E> error<E extends Exception>(E result) => FoldError(result);
 
   FutureOr<void> fold({
     void Function(T result)? onSuccess,
@@ -28,17 +28,17 @@ base class Fold<T, E extends Exception?> {
     void Function()? onLoading,
   }) {
     switch (_state) {
-      case FoldState.idle:
+      case _FoldState.idle:
         onIdle?.call();
         return null;
-      case FoldState.loading:
+      case _FoldState.loading:
         onLoading?.call();
         return null;
-      case FoldState.value:
-        onSuccess?.call((this as Value<T, void>).result);
+      case _FoldState.value:
+        onSuccess?.call((this as FoldValue<T, void>).result);
         return null;
-      case FoldState.error:
-        onError?.call((this as Error<void, E>).result);
+      case _FoldState.error:
+        onError?.call((this as FoldError<void, E>).result);
         return null;
     }
   }
@@ -52,14 +52,14 @@ base class Fold<T, E extends Exception?> {
   }) {
     Widget? widget;
     switch (_state) {
-      case FoldState.idle:
+      case _FoldState.idle:
         widget = onIdle?.call();
-      case FoldState.loading:
+      case _FoldState.loading:
         widget = onLoading?.call();
-      case FoldState.value:
-        widget = onSuccess?.call((this as Value<T, void>).result);
-      case FoldState.error:
-        widget = onError?.call((this as Error<void, E>).result);
+      case _FoldState.value:
+        widget = onSuccess?.call((this as FoldValue<T, void>).result);
+      case _FoldState.error:
+        widget = onError?.call((this as FoldError<void, E>).result);
     }
 
     if (widget == null) {
@@ -70,26 +70,26 @@ base class Fold<T, E extends Exception?> {
   }
 }
 
-final class Value<T, E extends Exception?> extends Fold<T, E> {
+final class FoldValue<T, E extends Exception?> extends Fold<T, E> {
   final T result;
 
-  Value(this.result) : super(FoldState.value);
+  FoldValue(this.result) : super(_FoldState.value);
 
-  Value.named({required this.result}) : super(FoldState.value);
+  FoldValue.named({required this.result}) : super(_FoldState.value);
 }
 
-final class Error<T, E extends Exception?> extends Fold<T, E> {
+final class FoldError<T, E extends Exception?> extends Fold<T, E> {
   final E result;
 
-  Error(this.result) : super(FoldState.error);
+  FoldError(this.result) : super(_FoldState.error);
 
-  Error.named({required this.result}) : super(FoldState.error);
+  FoldError.named({required this.result}) : super(_FoldState.error);
 }
 
-final class Loading<T, E extends Exception?> extends Fold<T, E> {
-  Loading() : super(FoldState.loading);
+final class FoldLoading<T, E extends Exception?> extends Fold<T, E> {
+  FoldLoading() : super(_FoldState.loading);
 }
 
-final class Idle<T, E extends Exception?> extends Fold<T, E> {
-  Idle() : super(FoldState.idle);
+final class FoldIdle<T, E extends Exception?> extends Fold<T, E> {
+  FoldIdle() : super(_FoldState.idle);
 }
